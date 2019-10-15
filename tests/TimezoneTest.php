@@ -1,17 +1,143 @@
 <?php
 
-class TimezoneTest extends PHPUnit_Framework_TestCase{
-    public function testConvertFromUTC(){
-        $timezone = new \Camroncade\Timezone\Timezone();
+namespace Camroncade\Tests\Timezone;
 
-        $this->assertEquals('2016-01-01 18:00:00',$timezone->convertFromUTC('2016-01-01 18:00:00','UTC'));
-        $this->assertEquals('18:30:20',$timezone->convertFromUTC('2016-01-01 18:30:20','UTC','H:i:s'));
+use Camroncade\Timezone\Timezone;
+use PHPUnit\Framework\TestCase;
+
+class TimezoneTest extends TestCase
+{
+    /**
+     * @throws \Exception
+     */
+    public function testConvertIntFromUTC()
+    {
+        $timezone = new \Camroncade\Timezone\Timezone();
+        $pacificTime = strtotime("2019-10-15 18:30:00.00");
+        $utcTime = strtotime("2019-10-16 01:30:00.00");
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
+        $this->assertEquals(
+            date($longFormat, $pacificTime),
+            $timezone->convertFromUTC($utcTime, 'America/Los_Angeles')
+        );
+        $this->assertEquals(
+            date($shortFormat, $pacificTime),
+            $timezone->convertFromUTC($utcTime, 'America/Los_Angeles', $shortFormat)
+        );
     }
 
-    public function testConvertToUTC(){
-        $timezone = new \Camroncade\Timezone\Timezone();
+    /**
+     * @throws \Exception
+     */
+    public function testConvertIntToUTC()
+    {
+        $timezone = new Timezone();
+        $pacificTime = strtotime("2019-10-15 18:30:00.00");
+        $utcTime = strtotime("2019-10-16 01:30:00.00");
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
 
-        $this->assertEquals('2016-01-01 18:00:00',$timezone->convertToUTC('2016-01-01 18:00:00','UTC'));
-        $this->assertEquals('18:30:20',$timezone->convertToUTC('2016-01-01 18:30:20','UTC','H:i:s'));
+        $this->assertEquals(
+            date($longFormat, $utcTime),
+            $timezone->convertToUTC($pacificTime, 'America/Los_Angeles')
+        );
+        $this->assertEquals(
+            date($shortFormat, $utcTime),
+            $timezone->convertToUTC($pacificTime, 'America/Los_Angeles', $shortFormat)
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testConvertStringFromUTC()
+    {
+        $timezone = new Timezone();
+        $pacificTime = "2019-10-15 18:30:00.00";
+        $utcTime = "2019-10-16 01:30:00.00";
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
+        $this->assertEquals(
+            date($longFormat, strtotime($pacificTime)),
+            $timezone->convertFromUTC($utcTime, 'America/Los_Angeles')
+        );
+        $this->assertEquals(
+            date($shortFormat, strtotime($pacificTime)),
+            $timezone->convertFromUTC($utcTime, 'America/Los_Angeles', $shortFormat)
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testConvertStringToUTC()
+    {
+        $timezone = new Timezone();
+        $pacificTime = "2019-10-15 18:30:00.00";
+        $utcTime = "2019-10-16 01:30:00.00";
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
+        $this->assertEquals(
+            date($longFormat, strtotime($utcTime)),
+            $timezone->convertToUTC($pacificTime, 'America/Los_Angeles')
+        );
+        $this->assertEquals(
+            date($shortFormat, strtotime($utcTime)),
+            $timezone->convertToUTC($pacificTime, 'America/Los_Angeles', $shortFormat)
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testBooleanTimestampThrowsException()
+    {
+        $timezone = new Timezone();
+        $this->expectException(\InvalidArgumentException::class);
+        $timezone->convertToUTC(true, 'UTC');
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testArrayTimestampThrowsException()
+    {
+        $timezone = new Timezone();
+        $this->expectException(\InvalidArgumentException::class);
+        $timezone->convertToUTC([], 'UTC');
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testObjectTimestampThrowsException()
+    {
+        $timezone = new Timezone();
+        $this->expectException(\InvalidArgumentException::class);
+        $timezone->convertToUTC(new \stdClass(), 'UTC');
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testNullTimestampThrowsException()
+    {
+        $timezone = new Timezone();
+        $this->expectException(\InvalidArgumentException::class);
+        $timezone->convertToUTC(null, 'UTC');
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testResourceTimestampThrowsException()
+    {
+        /** @var resource $resource */
+        $resource = fopen('php://temp', 'r');
+        $timezone = new Timezone();
+        $this->expectException(\InvalidArgumentException::class);
+        $timezone->convertToUTC($resource, 'UTC');
+        fclose($resource);
     }
 }
