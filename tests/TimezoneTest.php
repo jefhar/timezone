@@ -1,8 +1,12 @@
 <?php
 
+/** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
+/** @noinspection PhpFullyQualifiedNameUsageInspection */
+
 namespace Camroncade\Tests\Timezone;
 
 use Camroncade\Timezone\Timezone;
+use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
 
 class TimezoneTest extends TestCase
@@ -85,6 +89,64 @@ class TimezoneTest extends TestCase
         $this->assertEquals(
             date($shortFormat, strtotime($utcTime)),
             $timezone->convertToUTC($pacificTime, 'America/Los_Angeles', $shortFormat)
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testConvertDateTimeToUTC()
+    {
+        $timezone = new Timezone();
+        $pacificTime = "2019-10-15 18:30:00.00";
+        $utcTime = "2019-10-16 01:30:00.00";
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
+
+        $this->assertEquals(
+            date($longFormat, strtotime($utcTime)),
+            $timezone->convertToUTC(
+                new \DateTime($pacificTime, new \DateTimeZone('America/Los_Angeles')),
+                'America/Los_Angeles'
+            )
+        );
+
+        $this->assertEquals(
+            date($shortFormat, strtotime($utcTime)),
+            $timezone->convertToUTC(
+                new \DateTime($pacificTime, new \DateTimeZone('America/Los_Angeles')),
+                'America/Los_Angeles',
+                $shortFormat
+            )
+        );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testConvertCarbonToUTC()
+    {
+        $timezone = new Timezone();
+        $pacificTime = "2019-10-15 18:30:00.00";
+        $utcTime = "2019-10-16 01:30:00.00";
+        $shortFormat = 'H:i:s';
+        $longFormat = 'Y-m-d H:i:s';
+
+        $this->assertEquals(
+            date($longFormat, strtotime($utcTime)),
+            $timezone->convertToUTC(
+                new Carbon($pacificTime, 'America/Los_Angeles'),
+                'America/Los_Angeles'
+            )
+        );
+
+        $this->assertEquals(
+            date($shortFormat, strtotime($utcTime)),
+            $timezone->convertToUTC(
+                new Carbon($pacificTime, 'America/Los_Angeles'),
+                'America/Los_Angeles',
+                $shortFormat
+            )
         );
     }
 

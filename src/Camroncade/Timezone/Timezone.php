@@ -156,6 +156,8 @@ class Timezone
         '(UTC+13:00) Nuku\'alofa' => 'Pacific/Tongatapu',
     ];
 
+    public const DEFAULT_FORMAT = 'Y-m-d H:i:s';
+
     /**
      * @return array
      */
@@ -205,16 +207,18 @@ class Timezone
             $options .= "<option value='{$value}' {$optionAttributesString} {$selectedString}>{$key}</option>\n";
         }
 
-        $select =  preg_replace(
+        $select = preg_replace(
             ['/\s\s+/', '/ >/'],
             [' ', '>'],
             "<select {$selectAttributesString}>\n{$placeholder}{$options}</select>"
         );
         if (is_null($select)) {
+            /** @noinspection PhpFullyQualifiedNameUsageInspection */
             throw new \UnexpectedValueException(
                 'A parameter sent to Timezone::selectForm() created a null preg_replace.'
             );
         }
+
         return $select;
     }
 
@@ -226,10 +230,13 @@ class Timezone
      * @return string
      * @throws \Exception
      */
-    public function convertFromUTC($utcTimestamp, string $targetTimeZone, string $outputFormat = 'Y-m-d H:i:s'): string
-    {
-        $UTCdatetime = new DateTimeImmutable($this->timestampToString($utcTimestamp), new DateTimeZone('UTC'));
-        $targetDate = $UTCdatetime->setTimezone(new DateTimeZone($targetTimeZone));
+    public function convertFromUTC(
+        $utcTimestamp,
+        string $targetTimeZone,
+        string $outputFormat = self::DEFAULT_FORMAT
+    ): string {
+        $UTCDateTime = new DateTimeImmutable($this->timestampToString($utcTimestamp), new DateTimeZone('UTC'));
+        $targetDate = $UTCDateTime->setTimezone(new DateTimeZone($targetTimeZone));
 
         return $targetDate->format($outputFormat);
     }
@@ -242,13 +249,16 @@ class Timezone
      * @return string
      * @throws \Exception
      */
-    public function convertToUTC($localTimestamp, string $sourceTimeZone, string $outputFormat = 'Y-m-d H:i:s')
+    public function convertToUTC($localTimestamp, string $sourceTimeZone, string $outputFormat = self::DEFAULT_FORMAT)
     {
-        $localDatetime = new DateTimeImmutable($this->timestampToString($localTimestamp), new DateTimeZone($sourceTimeZone));
+        $localDateTime = new DateTimeImmutable(
+            $this->timestampToString($localTimestamp),
+            new DateTimeZone($sourceTimeZone)
+        );
 
-        $UTCdatetime = $localDatetime->setTimezone(new DateTimeZone('UTC'));
+        $UTCDateTime = $localDateTime->setTimezone(new DateTimeZone('UTC'));
 
-        return $UTCdatetime->format($outputFormat);
+        return $UTCDateTime->format($outputFormat);
     }
 
     /**
@@ -257,18 +267,34 @@ class Timezone
      */
     private function timestampToString($timestamp): string
     {
-
         switch (gettype($timestamp)) {
             case 'string':
                 return $timestamp;
-
             case 'integer':
                 // no break
             case 'double':
                 return date('Y-m-d H:i:s.v', $timestamp);
-
+            /** @noinspection PhpMissingBreakStatementInspection */
+            case 'object':
+                /** @noinspection PhpFullyQualifiedNameUsageInspection */
+                if (is_a($timestamp, \DateTimeInterface::class)) {
+                    return $this->convertDateTimeToString($timestamp);
+                }
+            //no break
             default:
-                throw new \InvalidArgumentException('Argument 1 must be numeric or a string.');
+                /** @noinspection PhpFullyQualifiedNameUsageInspection */
+                throw new \InvalidArgumentException('Argument 1 must be numeric, a string, or a DateTime object.');
         }
+    }
+
+    /**
+     * @param \DateTimeInterface $timestamp
+     * @return string
+     *
+     * /** @noinspection PhpFullyQualifiedNameUsageInspection
+     */
+    private function convertDateTimeToString(\DateTimeInterface $timestamp): string
+    {
+        return $timestamp->format(self::DEFAULT_FORMAT);
     }
 }
